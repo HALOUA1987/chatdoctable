@@ -10,6 +10,20 @@ import logging
 from unstructured.partition.pdf import partition_pdf
 from pydantic import BaseModel
 from typing import Any, List
+import os
+import subprocess
+
+def check_and_install_libgl():
+    try:
+        result = subprocess.run(["ldconfig", "-p"], text=True, capture_output=True)
+        if "libGL.so.1" not in result.stdout:
+            print("Installing libGL.so.1...")
+            subprocess.run(["sudo", "apt-get", "update"], check=True)
+            subprocess.run(["sudo", "apt-get", "install", "-y", "libgl1-mesa-glx"], check=True)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+check_and_install_libgl()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -98,13 +112,14 @@ def question_over_pdf_app():
         question = st.sidebar.text_input("Posez votre question ici")
 
         if st.sidebar.button("Ask"):
-            with st.sidebar.spinner("Fetching answer..."):
+            with st.spinner("Fetching answer..."):
                 response_text = answer_generation_chain_text.run(question)
                 response_table = answer_generation_chain_table.run(question)
                 # Here you might want to decide how to handle the responses from text and table chains
                 # For simplicity, we'll just show both responses
                 st.write(f"Text Response: {response_text}")
                 st.write(f"Table Response: {response_table}")
+
 
 st.set_page_config(page_title="Question over PDF using HF", page_icon="📖")
 st.markdown("# Question over text and table using HF")
