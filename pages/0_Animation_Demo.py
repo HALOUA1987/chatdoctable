@@ -1,84 +1,82 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from typing import Any
-
-import numpy as np
-
 import streamlit as st
-from streamlit.hello.utils import show_code
+from langchain.llms import CTransformers
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore.document import Document
+from langchain.document_loaders import PyPDFLoader
+from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chains import RetrievalQA
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
-def animation_demo() -> None:
+def load_llm(model_name):
+    llm = CTransformers(
+        model=model_name,
+        model_type="mistral",
+        max_new_tokens=1048,
+        temperature=0
+    )
+    return llm
 
-    # Interactive Streamlit elements, like these sliders, return their value.
-    # This gives you an extremely simple interaction model.
-    iterations = st.sidebar.slider("Level of detail", 2, 20, 10, 1)
-    separation = st.sidebar.slider("Separation", 0.7, 2.0, 0.7885)
+def file_processing(file_path):
+    loader = PyPDFLoader(file_path)
+    data = loader.load()
 
-    # Non-interactive elements return a placeholder to their location
-    # in the app. Here we're storing progress_bar to update it later.
-    progress_bar = st.sidebar.progress(0)
+    content = ''
+    for page in data:
+        content += page.page_content
+        
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=300,
+        chunk_overlap=30
+    )
 
-    # These two elements will be filled in later, so we create a placeholder
-    # for them using st.empty()
-    frame_text = st.sidebar.empty()
-    image = st.empty()
+    chunks = splitter.split_text(content)
+    documents = [Document(page_content=t) for t in chunks]
+    return documents
 
-    m, n, s = 960, 640, 400
-    x = np.linspace(-m / s, m / s, num=m).reshape((1, m))
-    y = np.linspace(-n / s, n / s, num=n).reshape((n, 1))
+@st.cache(allow_output_mutation=True, suppress_st_warning=True)
+def llm_pipeline(file_path, model_name):
+    documents = file_processing(file_path)
+    embeddings = HuggingFaceBgeEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    vector_store = FAISS.from_documents(documents, embeddings)
+    llm_answer_gen = load_llm(model_name)
+    answer_generation_chain = RetrievalQA.from_chain_type(llm=llm_answer_gen, 
+                                                          chain_type="stuff", 
+                                                          retriever=vector_store.as_retriever())
+    return answer_generation_chain
 
-    for frame_num, a in enumerate(np.linspace(0.0, 4 * np.pi, 100)):
-        # Here were setting value for these two elements.
-        progress_bar.progress(frame_num)
-        frame_text.text("Frame %i/100" % (frame_num + 1))
+def question_over_pdf_app():
+    model_selection = st.sidebar.selectbox(
+        'Select a Model:',
+        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF')
+    )
 
-        # Performing some fractal wizardry.
-        c = separation * np.exp(1j * a)
-        Z = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
-        C = np.full((n, m), c)
-        M: Any = np.full((n, m), True, dtype=bool)
-        N = np.zeros((n, m))
+    uploaded_file = st.sidebar.file_uploader("Upload your PDF file here", type=['pdf'])
 
-        for i in range(iterations):
-            Z[M] = Z[M] * Z[M] + C[M]
-            M[np.abs(Z) > 2] = False
-            N[M] = i
+    if uploaded_file:
+        with st.sidebar.spinner("Analyzing..."):
+            with open("temp_pdf.pdf", "wb") as f:
+                f.write(uploaded_file.getvalue())
+            answer_generation_chain = llm_pipeline("temp_pdf.pdf", model_selection)
+        st.sidebar.success("PDF Analyzed! You can now ask questions.")
 
-        # Update the image placeholder by calling the image() function on it.
-        image.image(1.0 - (N / N.max()), use_column_width=True)
+        question = st.sidebar.text_input("Posez votre question ici")
 
-    # We clear elements by calling empty on them.
-    progress_bar.empty()
-    frame_text.empty()
+        if st.sidebar.button("Ask"):
+            with st.sidebar.spinner("Fetching answer..."):
+                response = answer_generation_chain.run(question)
+                st.write(response)
 
-    # Streamlit widgets automatically run the script from top to bottom. Since
-    # this button is not connected to any other logic, it just causes a plain
-    # rerun.
-    st.button("Re-run")
-
-
-st.set_page_config(page_title="Animation Demo", page_icon="📹")
-st.markdown("# Animation Demo")
-st.sidebar.header("Animation Demo")
+st.set_page_config(page_title="Question over PDF using HF", page_icon="📖")
+st.markdown("# Question over PDF using HF")
+st.sidebar.header("Question over PDF using HF")
 st.write(
-    """This app shows how you can use Streamlit to build cool animations.
-It displays an animated fractal based on the the Julia Set. Use the slider
-to tune different parameters."""
+    """This app allows you to upload a PDF, select a model, and ask questions based on the content of the PDF."""
 )
 
-animation_demo()
+question_over_pdf_app()
 
-show_code(animation_demo)
+# You can call show_code if you want to show the code of this app
+# show_code(question_over_pdf_app)
