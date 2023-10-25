@@ -56,7 +56,7 @@ def question_over_pdf_app():
     uploaded_file = st.sidebar.file_uploader("Upload your PDF file here", type=['pdf'])
 
     if uploaded_file:
-        with st.sidebar.spinner("Analyzing..."):
+        with st.spinner("Analyzing..."):
             with open("temp_pdf.pdf", "wb") as f:
                 f.write(uploaded_file.getvalue())
             answer_generation_chain = llm_pipeline("temp_pdf.pdf", model_selection)
@@ -65,7 +65,7 @@ def question_over_pdf_app():
         question = st.sidebar.text_input("Posez votre question ici")
 
         if st.sidebar.button("Ask"):
-            with st.sidebar.spinner("Fetching answer..."):
+            with st.spinner("Fetching answer..."):
                 response = answer_generation_chain.run(question)
                 st.write(response)
 
