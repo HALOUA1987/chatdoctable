@@ -2,7 +2,7 @@ import streamlit as st
 from langchain.llms import CTransformers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import PyPDFLoadser
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
