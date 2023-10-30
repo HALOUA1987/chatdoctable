@@ -97,7 +97,7 @@ def llm_pipeline(file_path: str, model_name: str):
 def question_over_pdf_app():
     model_selection = st.sidebar.selectbox(
         'Select a Model:',
-        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF')
+        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF','TheBloke/zephyr-7B-beta-GGUF')
     )
 
     uploaded_file = st.sidebar.file_uploader("Upload your PDF file here", type=['pdf'])

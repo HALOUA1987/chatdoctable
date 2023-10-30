@@ -39,7 +39,7 @@ def file_processing(file_path):
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def llm_pipeline(file_path, model_name):
     documents = file_processing(file_path)
-    embeddings = HuggingFaceBgeEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    embeddings = HuggingFaceBgeEmbeddings(model_name="BAAI/bge-large-en-v1.5")
     vector_store = FAISS.from_documents(documents, embeddings)
     llm_answer_gen = load_llm(model_name)
     answer_generation_chain = RetrievalQA.from_chain_type(llm=llm_answer_gen, 
@@ -50,7 +50,7 @@ def llm_pipeline(file_path, model_name):
 def question_over_pdf_app():
     model_selection = st.sidebar.selectbox(
         'Select a Model:',
-        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF')
+        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF','TheBloke/zephyr-7B-beta-GGUF')
     )
 
     uploaded_file = st.sidebar.file_uploader("Upload your PDF file here", type=['pdf'])
