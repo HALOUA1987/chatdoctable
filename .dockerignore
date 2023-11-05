@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches and logs
+.cache/
+*.log
+
+# Test and documentation files
+tests/
+docs/
+
+# Virtual environment
+env/
+venv/
+
+# OS generated files
+.DS_Store
+ehthumbs.db
+Icon
+Thumbs.db
+
+# Version control
+.git/
+
+# Data files
+data/
