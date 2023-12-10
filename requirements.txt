@@ -19,3 +19,8 @@ unstructured[all-docs]
 pydantic
 pdfkit
 requests
+qdrant_client
+llama_index
+huggingface-hub
+torch
+chromadb

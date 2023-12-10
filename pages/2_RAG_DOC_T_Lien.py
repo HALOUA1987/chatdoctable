@@ -141,7 +141,7 @@ def url_to_pdf(full_url, personal_access_token):
 def question_over_pdf_app():
     model_selection = st.sidebar.selectbox(
         'Select a Model:',
-        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF', 'TheBloke/zephyr-7B-beta-GGUF')
+        ('TheBloke/Mistral-7B-Instruct-v0.1-GGUF', 'TheBloke/zephyr-7B-alpha-GGUF', 'TheBloke/zephyr-7B-beta-GGUF','TheBloke/neural-chat-7B-v3-1-GGUF')
     )
 
     uploaded_file = st.sidebar.file_uploader("Upload your PDF file here", type=['pdf'])
