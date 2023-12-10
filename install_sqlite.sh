@@ -6,7 +6,7 @@ sudo apt-get update
 sudo apt-get install -y build-essential wget
 
 # Define SQLite version
-SQLITE_VERSION=3360000  # Replace with the version you need
+SQLITE_VERSION=3440200  # Replace with the version you need
 
 # Download and extract SQLite source code
 wget https://www.sqlite.org/2023/sqlite-autoconf-$SQLITE_VERSION.tar.gz
